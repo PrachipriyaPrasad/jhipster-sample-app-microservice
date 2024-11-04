@@ -3,29 +3,16 @@ trigger:
     include:
       - main
 
-variables:
-  retryCount: 0            # Start retry count at 0
-  maxRetries: 3            # Maximum retry attempts
-
-stages:
-- stage: BuildStage
-  displayName: "Build and Test Stage"
-  condition: lt(variables['retryCount'], variables['maxRetries'])   # Run stage if retry count is less than maxRetries
-  jobs:
-  - job: BuildJob
-    displayName: "Build Job"
+jobs:
+  - job: RetryJob
+    displayName: "Job with Retry Mechanism"
     steps:
-    - script: |
-        echo "Starting Build Job, Attempt: $(retryCount)"
-        # Simulate failure for demonstration
-        if [ "$(retryCount)" -lt "$(maxRetries)" ]; then
-          echo "Job failed, retrying..."
-          exit 1    # Fail the job to trigger retry
-        fi
-      displayName: "Run Build Script"
-
-    - script: |
-        echo "Updating retry count"
-        echo "##vso[task.setvariable variable=retryCount]$(( $(retryCount) + 1 ))"
-      displayName: "Increment Retry Count"
-      condition: failed()    # Only increment retry count if the job fails
+      - task: Bash@3
+        displayName: "Run a Sample Script"
+        inputs:
+          targetType: 'inline'
+          script: |
+            echo "Running a task..."
+            # Simulate a task failure (exit code 1)
+            exit 1
+        retryCountOnTaskFailure: 3
